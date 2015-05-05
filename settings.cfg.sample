@@ -1,0 +1,6 @@
+[Jira]
+Server: https://cards.linaro.org/
+Username: 
+Password: 
+[common]
+outputfile: cards.log
