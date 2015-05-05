@@ -110,6 +110,7 @@ def get_worklog(jira, db, issues):
                    'summary': issue.fields.summary,
                    'fixversion': issue.fields.fixVersions[0].name if issue.fields.fixVersions is not None else "",
                    'confidence': issue.fields.customfield_11200,
+                   'status': issue.fields.status.name,
                    'rank': issue.fields.customfield_10900,
                    'engineeringprogress': issue.fields.customfield_10204})
 
@@ -130,8 +131,8 @@ def report(jira, db, issues, outfile):
     old_parent = ""
     print >>outfile, '<table border=0>'
     for issue in db_sorted:
-        print >>outfile, '<tr><td><b>' + linkit(issue['key']) + ' - ' + issue['summary'] + '</b><br>'
-        print >>outfile, 'Target Delivery: ' + issue['fixversion'] + ', Confidence: ' + issue['confidence'] + '<br>'
+        print >>outfile, '<tr><td>&nbsp;&nbsp;</td><td><b>' + linkit(issue['key']) + ' - ' + issue['summary'] + '</b><br>'
+        print >>outfile, 'Status: ' + issue['status'] + ', Target Delivery: ' + issue['fixversion'] + ', Confidence: ' + issue['confidence'] + '<br>'
         print >>outfile, '<font size=-2>&nbsp;<br></font>'
         print >>outfile, '' + stripspecial(issue['engineeringprogress']) + '</td></tr>'
     print >>outfile, '</table>'
@@ -159,7 +160,8 @@ def walkcards():
     #Initialize dictionaries that will be used to store cards
     db = []
     basequery = ' project = card AND summary !~ epic AND component = ' + team
-    basequery += ' AND updatedDate > -30d AND status not in (Closed)'
+    basequery += ' AND updatedDate > -25d '
+    #basequery += ' AND status not in (Closed)'
     basequery += ' AND level not in ("Private - reporter only")'
     basequery += ' ORDER BY rank'
     debugquery = ""
