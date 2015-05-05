@@ -88,7 +88,7 @@ def setup_args_parser():
     return parser.parse_args()
 
 
-def get_worklog(jira, db, issues):
+def get_carddetails(jira, db, issues):
     """get_worklog - Build an intermediate database of recently worked on issues
 
     :param jira: a database session
@@ -180,7 +180,7 @@ def walkcards():
         if len(issues) <= 0:
             break
 
-        get_worklog(jira, db, issues)
+        get_carddetails(jira, db, issues)
 
     week = str(datetime.datetime.now().isocalendar()[1])
     year = str(datetime.datetime.now().isocalendar()[0])
