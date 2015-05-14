@@ -101,12 +101,9 @@ def get_carddetails(jira, db, issues):
     for issue in issues:
         logger.debug(issue.key + ' [' + issue.fields.summary + ']')
 
-        if issue.fields.assignee is None:
-            issueowner = "Unassigned"
-        else:
-            issueowner = issue.fields.assignee.name
+        #iterate through each issue and add it to the database
         db.append({'key': issue.key,
-                   'assignee': issueowner,
+                   'assignee': issue.fields.assignee.name if issue.fields.assignee is not None else "Unassigned",
                    'summary': issue.fields.summary,
                    'fixversion': issue.fields.fixVersions[0].name if issue.fields.fixVersions is not None else "",
                    'confidence': issue.fields.customfield_11200,
@@ -116,7 +113,13 @@ def get_carddetails(jira, db, issues):
 
 
 def stripspecial(incoming):
-    return incoming.replace(u"\u2018", "'").replace(u"\u2019", "'")
+    return incoming.replace(u"\u2018", "'").\
+        replace(u"\u2019", "'").\
+        replace(u"\u201c", '"').\
+        replace(u"\u2033", '"').\
+        replace(u"\u2013", '"').\
+        replace(u"\u2014", '').\
+        replace('\n', '<br />')
 
 
 def linkit(incoming):
@@ -159,7 +162,12 @@ def walkcards():
 
     #Initialize dictionaries that will be used to store cards
     db = []
-    basequery = ' project = card AND summary !~ epic AND component = ' + team
+    basequery = ' project = card AND component = ' + team
+    if team == 'LAVA':
+        #LAVA monthly report is built from EPIC updates
+        basequery += ' AND summary ~ epic '
+    else:
+        basequery += ' AND summary !~ epic '
     basequery += ' AND updatedDate > -25d '
     #basequery += ' AND status not in (Closed)'
     basequery += ' AND level not in ("Private - reporter only")'
