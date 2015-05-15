@@ -88,6 +88,8 @@ def setup_args_parser():
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("-c", "--component", required=True, help="Jira Component")
     parser.add_argument("-s", "--stale", action="store_true", help="List Cards not updated in > 14 days")
+    parser.add_argument("--only_epics", action="store_true", help="List only epics")
+    parser.add_argument("--only_cards", action="store_false", help="List only cards *Default*")
     return parser.parse_args()
 
 
@@ -104,11 +106,11 @@ def get_carddetails(jira, db, issues):
     for issue in issues:
         logger.debug(issue.key + ' [' + issue.fields.summary + ']')
 
-        #iterate through each issue and add it to the database
+        # iterate through each issue and add it to the database
         db.append({'key': issue.key,
                    'assignee': issue.fields.assignee.name if issue.fields.assignee is not None else "Unassigned",
                    'summary': issue.fields.summary,
-                   'fixversion': issue.fields.fixVersions[0].name if issue.fields.fixVersions.__len__() > 0 else "" ,
+                   'fixversion': issue.fields.fixVersions[0].name if issue.fields.fixVersions.__len__() > 0 else "",
                    'confidence': issue.fields.customfield_11200,
                    'status': issue.fields.status.name,
                    'rank': issue.fields.customfield_10900,
@@ -133,13 +135,13 @@ def linkit(incoming):
 
 def constructquery(args):
     basequery = ' project = card AND component = ' + args.component
-    if args.component == 'LAVA':
-        #LAVA monthly report is built from EPIC updates
-        basequery += ' AND summary ~ epic '
-    else:
-        basequery += ' AND summary !~ epic '
+    if args.only_epics:
+        basequery += ' AND summary ~ epic'
 
-    if args.stale==True:
+    if args.only_cards:
+        basequery += ' AND summary !~ epic'
+
+    if args.stale is True:
         basequery += ' AND updated < -14d '
         basequery += ' AND status != Closed'
     else:
@@ -147,7 +149,8 @@ def constructquery(args):
 
     basequery += ' AND level not in ("Private - reporter only")'
     basequery += ' ORDER BY rank'
-    return basequery    
+    return basequery
+
 
 def report(jira, db, issues, outfile):
     """report - Report by user the amount of time logged (percentage)
@@ -185,7 +188,7 @@ def walkcards():
     if args.component is None:
         raise JiraComponentError('You need to specify a jira component')
 
-    #Initialize dictionaries that will be used to store cards
+    # Initialize dictionaries that will be used to store cards
     db = []
     basequery = constructquery(args)
     debugquery = ""
