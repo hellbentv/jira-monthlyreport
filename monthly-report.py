@@ -87,6 +87,7 @@ def setup_args_parser():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("-c", "--component", required=True, help="Jira Component")
+    parser.add_argument("-s", "--stale", action="store_true", help="List Cards not updated in > 14 days")
     return parser.parse_args()
 
 
@@ -130,6 +131,24 @@ def linkit(incoming):
     return '<a href="http://cards.linaro.org/browse/' + incoming + '">' + incoming + '</a>'
 
 
+def constructquery(args):
+    basequery = ' project = card AND component = ' + args.component
+    if args.component == 'LAVA':
+        #LAVA monthly report is built from EPIC updates
+        basequery += ' AND summary ~ epic '
+    else:
+        basequery += ' AND summary !~ epic '
+
+    if args.stale==True:
+        basequery += ' AND updated < -14d '
+        basequery += ' AND status != Closed'
+    else:
+        basequery += ' AND updatedDate > -25d '
+
+    basequery += ' AND level not in ("Private - reporter only")'
+    basequery += ' ORDER BY rank'
+    return basequery    
+
 def report(jira, db, issues, outfile):
     """report - Report by user the amount of time logged (percentage)
     """
@@ -168,16 +187,7 @@ def walkcards():
 
     #Initialize dictionaries that will be used to store cards
     db = []
-    basequery = ' project = card AND component = ' + args.component
-    if args.component == 'LAVA':
-        #LAVA monthly report is built from EPIC updates
-        basequery += ' AND summary ~ epic '
-    else:
-        basequery += ' AND summary !~ epic '
-    basequery += ' AND updatedDate > -25d '
-    #basequery += ' AND status not in (Closed)'
-    basequery += ' AND level not in ("Private - reporter only")'
-    basequery += ' ORDER BY rank'
+    basequery = constructquery(args)
     debugquery = ""
 
     logger.debug('[' + basequery + ']')
