@@ -21,6 +21,8 @@ import sys
 import datetime
 import codecs
 import locale
+import urllib3.contrib.pyopenssl
+urllib3.contrib.pyopenssl.inject_into_urllib3()
 
 from jira.client import JIRA
 DEFAULT_LOGGER_NAME = "test.log"
@@ -108,7 +110,7 @@ def get_carddetails(jira, db, issues):
         db.append({'key': issue.key,
                    'assignee': issueowner,
                    'summary': issue.fields.summary,
-                   'fixversion': issue.fields.fixVersions[0].name if issue.fields.fixVersions is not None else "",
+                   'fixversion': issue.fields.fixVersions[0].name if issue.fields.fixVersions.__len__() > 0 else "" ,
                    'confidence': issue.fields.customfield_11200,
                    'status': issue.fields.status.name,
                    'rank': issue.fields.customfield_10900,
@@ -116,7 +118,10 @@ def get_carddetails(jira, db, issues):
 
 
 def stripspecial(incoming):
-    return incoming.replace(u"\u2018", "'").replace(u"\u2019", "'")
+    if incoming is not None:
+        return incoming.replace(u"\u2018", "'").replace(u"\u2019", "'")
+    else:
+        return ""
 
 
 def linkit(incoming):
@@ -132,7 +137,12 @@ def report(jira, db, issues, outfile):
     print >>outfile, '<table border=0>'
     for issue in db_sorted:
         print >>outfile, '<tr><td>&nbsp;&nbsp;</td><td><b>' + linkit(issue['key']) + ' - ' + issue['summary'] + '</b><br>'
-        print >>outfile, 'Status: ' + issue['status'] + ', Target Delivery: ' + issue['fixversion'] + ', Confidence: ' + issue['confidence'] + '<br>'
+        print >>outfile, 'Status: ' + issue['status']
+        print >>outfile, ', Target Delivery: ' + issue['fixversion']
+        if issue['confidence'] is None:
+            print >> outfile, ', Confidence: ' + 'Not set'
+        else:
+            print >>outfile, ', Confidence: ' + issue['confidence'] + '<br>'
         print >>outfile, '<font size=-2>&nbsp;<br></font>'
         print >>outfile, '' + stripspecial(issue['engineeringprogress']) + '</td></tr>'
     print >>outfile, '</table>'
