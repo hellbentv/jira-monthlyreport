@@ -145,7 +145,6 @@ def report(jira, db, issues, outfile):
             print >> outfile, ', Confidence: ' + 'Not set'
         else:
             print >>outfile, ', Confidence: ' + issue['confidence'] + '<br>'
-        print >>outfile, '<font size=-2>&nbsp;<br></font>'
         print >>outfile, '' + stripspecial(issue['engineeringprogress']) + '</td></tr>'
     print >>outfile, '</table>'
 
