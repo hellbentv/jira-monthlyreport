@@ -182,30 +182,21 @@ def walkcards():
     basequery += ' ORDER BY rank'
     debugquery = ""
 
-    queryrange = 25
-    logger.debug('[' + str(queryrange) + ' results at a time]')
     logger.debug('[' + basequery + ']')
     if debugquery:
         logger.info('WARNING DEBUG ON [' + debugquery + ']')
-    for i in range(0, queryrange):
-        low = i * queryrange
-        numResults = queryrange
-        logger.debug('..')
-        logger.debug(' ###  low:' + str(low) + '    high:' + str(queryrange - 1))
-        issues = jira.search_issues(basequery + debugquery, startAt=low, maxResults=queryrange, expand='renderedFields')
-        if len(issues) <= 0:
-            break
-
+    issues = jira.search_issues(basequery + debugquery, expand='renderedFields')
+    if len(issues) > 0:
         get_carddetails(jira, db, issues)
 
-    week = str(datetime.datetime.now().isocalendar()[1])
-    year = str(datetime.datetime.now().isocalendar()[0])
-    filename = 'MonthlyReport-' + team + '_week-' + year + '_' + week + '.html'
-    logger.info('Report saved in [' + filename + ']')
+        week = str(datetime.datetime.now().isocalendar()[1])
+        year = str(datetime.datetime.now().isocalendar()[0])
+        filename = 'MonthlyReport-' + team + '_week-' + year + '_' + week + '.html'
+        logger.info('Report saved in [' + filename + ']')
 
-    outfile = open(filename, 'w')
-    report(jira, db, issues, outfile)
-    outfile.close()
+        outfile = open(filename, 'w')
+        report(jira, db, issues, outfile)
+        outfile.close()
 
 
 if __name__ == '__main__':
