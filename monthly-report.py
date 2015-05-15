@@ -111,7 +111,7 @@ def get_carddetails(jira, db, issues):
                    'confidence': issue.fields.customfield_11200,
                    'status': issue.fields.status.name,
                    'rank': issue.fields.customfield_10900,
-                   'engineeringprogress': issue.fields.customfield_10204})
+                   'engineeringprogress': issue.renderedFields.customfield_10204})
 
 
 def stripspecial(incoming):
@@ -121,8 +121,7 @@ def stripspecial(incoming):
             replace(u"\u201c", '"').\
             replace(u"\u2033", '"').\
             replace(u"\u2013", '"').\
-            replace(u"\u2014", '').\
-            replace('\n', '<br />')
+            replace(u"\u2014", '')
     else:
         return ""
 
@@ -194,7 +193,7 @@ def walkcards():
         numResults = queryrange
         logger.debug('..')
         logger.debug(' ###  low:' + str(low) + '    high:' + str(queryrange - 1))
-        issues = jira.search_issues(basequery + debugquery, startAt=low, maxResults=queryrange)
+        issues = jira.search_issues(basequery + debugquery, startAt=low, maxResults=queryrange, expand='renderedFields')
         if len(issues) <= 0:
             break
 
