@@ -86,7 +86,7 @@ def setup_args_parser():
     description = "Walk through the Cards and generate some metrics"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("-d", "--debug", action="store_true")
-    parser.add_argument("-t", "--team", required=True, help="Team / Jira Project")
+    parser.add_argument("-c", "--component", required=True, help="Jira Component")
     return parser.parse_args()
 
 
@@ -163,15 +163,13 @@ def walkcards():
     if jira is None:
         sys.exit(1)
 
-    #default jira project= LSK
-    team = 'LSK'
-    if args.team is not None:
-        team = args.team
+    if args.component is None:
+        raise JiraComponentError('You need to specify a jira component')
 
     #Initialize dictionaries that will be used to store cards
     db = []
-    basequery = ' project = card AND component = ' + team
-    if team == 'LAVA':
+    basequery = ' project = card AND component = ' + args.component
+    if args.component == 'LAVA':
         #LAVA monthly report is built from EPIC updates
         basequery += ' AND summary ~ epic '
     else:
@@ -191,7 +189,7 @@ def walkcards():
 
         week = str(datetime.datetime.now().isocalendar()[1])
         year = str(datetime.datetime.now().isocalendar()[0])
-        filename = 'MonthlyReport-' + team + '_week-' + year + '_' + week + '.html'
+        filename = 'MonthlyReport-' + args.component + '_week-' + year + '_' + week + '.html'
         logger.info('Report saved in [' + filename + ']')
 
         outfile = open(filename, 'w')
