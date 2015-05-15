@@ -88,8 +88,8 @@ def setup_args_parser():
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("-c", "--component", required=True, help="Jira Component")
     parser.add_argument("-s", "--stale", action="store_true", help="List Cards not updated in > 14 days")
-    parser.add_argument("--only_epics", action="store_true", help="List only epics")
-    parser.add_argument("--only_cards", action="store_false", help="List only cards *Default*")
+    parser.add_argument("--only_epics", action="store_true", help="List only epics, default is only cards")
+
     return parser.parse_args()
 
 
@@ -137,8 +137,7 @@ def constructquery(args):
     basequery = ' project = card AND component = ' + args.component
     if args.only_epics:
         basequery += ' AND summary ~ epic'
-
-    if args.only_cards:
+    else:
         basequery += ' AND summary !~ epic'
 
     if args.stale is True:
