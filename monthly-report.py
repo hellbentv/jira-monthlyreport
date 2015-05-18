@@ -165,7 +165,7 @@ def constructquery(args):
 def report(jira, db, issues, outfile):
     """report - Report by user the amount of time logged (percentage)
     """
-    db_sorted = sorted(db, key=lambda field: field['rank'])
+    db_sorted = sorted(db, key=lambda field: (field['team'], field['rank']))
     old_assignee = ""
     old_parent = ""
     print >>outfile, '<table border=0>'
