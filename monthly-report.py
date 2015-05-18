@@ -21,6 +21,7 @@ import sys
 import datetime
 import codecs
 import locale
+import re
 import urllib3.contrib.pyopenssl
 urllib3.contrib.pyopenssl.inject_into_urllib3()
 
@@ -29,7 +30,7 @@ DEFAULT_LOGGER_NAME = "test.log"
 logger = None
 __version__ = "2014.01.1"
 DEFAULT_LOGGER_NAME = "cards.dbg.log"
-
+teampattern = re.compile('Team-*', re.IGNORECASE)
 
 def connect_jira(logger):
     """Connect to Jira Instance
@@ -106,15 +107,25 @@ def get_carddetails(jira, db, issues):
     for issue in issues:
         logger.debug(issue.key + ' [' + issue.fields.summary + ']')
 
-        # iterate through each issue and add it to the database
+        team = ""
+	if issue.fields.labels.__len__() > 0:
+             logger.debug(', '.join(issue.fields.labels))
+             for t in issue.fields.labels:
+                 m = teampattern.match(t)
+                 if m:
+                     team = t[5:]
+         
+        #iterate through each issue and add it to the database
         db.append({'key': issue.key,
                    'assignee': issue.fields.assignee.name if issue.fields.assignee is not None else "Unassigned",
                    'summary': issue.fields.summary,
-                   'fixversion': issue.fields.fixVersions[0].name if issue.fields.fixVersions.__len__() > 0 else "",
+                   'fixversion': issue.fields.fixVersions[0].name if issue.fields.fixVersions.__len__() > 0 else "" ,
+                   'labels': ', '.join(issue.fields.labels) if issue.fields.labels.__len__() > 0 else "" ,
                    'confidence': issue.fields.customfield_11200,
                    'status': issue.fields.status.name,
                    'rank': issue.fields.customfield_10900,
-                   'engineeringprogress': issue.renderedFields.customfield_10204})
+                   'engineeringprogress': issue.renderedFields.customfield_10204,
+                   'team' : team})
 
 
 def stripspecial(incoming):
@@ -138,9 +149,9 @@ def constructquery(args):
     if args.only_epics:
         basequery += ' AND summary ~ epic'
     else:
-        basequery += ' AND summary !~ epic'
+        basequery += ' AND summary !~ epic '
 
-    if args.stale is True:
+    if args.stale==True:
         basequery += ' AND updated < -14d '
         basequery += ' AND status != Closed'
     else:
@@ -160,6 +171,7 @@ def report(jira, db, issues, outfile):
     print >>outfile, '<table border=0>'
     for issue in db_sorted:
         print >>outfile, '<tr><td>&nbsp;&nbsp;</td><td><b>' + linkit(issue['key']) + ' - ' + issue['summary'] + '</b><br>'
+        print >>outfile, 'Team: ' + issue['team'] + '<br>'
         print >>outfile, 'Status: ' + issue['status']
         print >>outfile, ', Target Delivery: ' + issue['fixversion']
         if issue['confidence'] is None:
