@@ -171,7 +171,7 @@ def report(jira, db, issues, outfile):
     print >>outfile, '<table border=0>'
     for issue in db_sorted:
         print >>outfile, '<tr><td>&nbsp;&nbsp;</td><td><b>' + linkit(issue['key']) + ' - ' + issue['summary'] + '</b><br>'
-        print >>outfile, 'Team: ' + issue['team'] + '<br>'
+        if issue['team'] != '': print >>outfile, 'Team: ' + issue['team'] + '<br>'
         print >>outfile, 'Status: ' + issue['status']
         print >>outfile, ', Target Delivery: ' + issue['fixversion']
         if issue['confidence'] is None:
